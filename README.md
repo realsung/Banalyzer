@@ -6,13 +6,15 @@
 
 ## Introduce
 
+## Enviroment
+- Tested on IDA Pro 7.5, 7.6
+- Python3 
 
 ## Features
 > malloc(), free() detection <br>
 > Automatic vuln scan <br>
 
 ## How To Use?
-
 
 ### To-do
 * Code objectification (Python Class)
