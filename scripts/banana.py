@@ -1,37 +1,20 @@
 import idautils
 import idc
 
-vuln_func_list = ['strcpy', 'strncpy', 'strcat', 'strncat', 'sprintf', 'vsprintf', 'gets', 'memcpy', 'memmove', 'fread', 'strcpyA', 'strcpyW', 'wcscpy', 'StrCpy', 'lstrcpy', 'lstrcpyA', 'lstrcpyW', 'StrCpyA', 'StrCpyW', 'lstrcpyn', 'lstrcpynA', 'lstrcpynW', 'StrCpyNW', 'StrCpyNA', 'StrNCpy', 'strncpyA', 'strncpyW', 'wcsncpy', 'StrCpyN', 'strcatA', 'strcatW', 'lstrcat', 'lstrcatA', 'lstrcatW', 'StrCat', 'StrCatA', 'StrCatW', 'StrCatBuff', 'StrCatBuffA', 'StrCatBuffW', 'StrCatChainW', 'StrCatN', 'StrCatNA', 'StrCatNW', 'strncatA', 'strncatW', 'wcsncat', 'StrCatN', 'StrCatNA', 'StrCatNW', 'sprintfA', 'sprintfW', 'wsprintf', 'wsprintfA', 'wsprintfW', 'sprintfW', 'sprintfA', 'swprintf', 'swprintfA', 'swprintfW', 'vswprintf', 'vswprintfA', 'vswprintfW', 'vsprintfA', 'vsprintfW', 'vsprintf', 'strcpyA', 'strcpyW', 'wcscpy', 'StrCpy', 'lstrcpy', 'lstrcpyA', 'lstrcpyW', 'StrCpyA', 'StrCpyW', 'lstrcpyn', 'lstrcpynA', 'lstrcpynW', 'StrCpyNW', 'StrCpyNA', 'StrNCpy', 'strncpyA', 'strncpyW', 'wcsncpy', 'StrCpyN', 'strcatA', 'strcatW', 'lstrcat', 'lstrcatA', 'lstrcatW', 'StrCat', 'StrCatA', 'StrCatW', 'StrCatBuff', 'StrCatBuffA', 'StrCatBuffW', 'StrCatChainW', 'StrCatN', 'StrCatNA','malloc', 'free',]
-func_call_counts = {"malloc": 0, "free": 0}
+vuln_func_list = ['strcpy', 'strncpy', 'strcat', 'strncat', 'sprintf', 'vsprintf', 'gets', 'memcpy', 'memmove', 'fread', 'strcpyA', 'strcpyW', 'wcscpy', 'StrCpy', 'lstrcpy', 'lstrcpyA', 'lstrcpyW', 'StrCpyA', 'StrCpyW', 'lstrcpyn', 'lstrcpynA', 'lstrcpynW', 'StrCpyNW', 'StrCpyNA', 'StrNCpy', 'strncpyA', 'strncpyW', 'wcsncpy', 'StrCpyN', 'strcatA', 'strcatW', 'lstrcat', 'lstrcatA', 'lstrcatW', 'StrCat', 'StrCatA', 'StrCatW', 'StrCatBuff', 'StrCatBuffA', 'StrCatBuffW', 'StrCatChainW', 'StrCatN', 'StrCatNA', 'StrCatNW', 'strncatA', 'strncatW', 'wcsncat', 'StrCatN', 'StrCatNA', 'StrCatNW', 'sprintfA', 'sprintfW', 'wsprintf', 'wsprintfA', 'wsprintfW', 'sprintfW', 'sprintfA', 'swprintf', 'swprintfA', 'swprintfW', 'vswprintf', 'vswprintfA', 'vswprintfW', 'vsprintfA', 'vsprintfW', 'vsprintf', 'strcpyA', 'strcpyW', 'wcscpy', 'StrCpy', 'lstrcpy', 'lstrcpyA', 'lstrcpyW', 'StrCpyA', 'StrCpyW', 'lstrcpyn', 'lstrcpynA', 'lstrcpynW', 'StrCpyNW', 'StrCpyNA', 'StrNCpy', 'strncpyA', 'strncpyW', 'wcsncpy', 'StrCpyN', 'strcatA', 'strcatW', 'lstrcat', 'lstrcatA', 'lstrcatW', 'StrCat', 'StrCatA', 'StrCatW', 'StrCatBuff', 'StrCatBuffA', 'StrCatBuffW', 'StrCatChainW', 'StrCatN', 'StrCatNA','malloc', 'free']
 vuln_func_called_list = {}
+func_list = {}
 
-def find_malloc_calls(func_ea, visited=None):
-    if visited is None:
-        visited = set()
+vuln_func_list += ['.' + func_name for func_name in vuln_func_list]
 
-    malloc_calls = {}
-    for (startea, endea) in idautils.Chunks(func_ea):
-        for head in idautils.Heads(startea, endea):
-            if idc.print_insn_mnem(head) == "call":
-                print(idc.print_insn_mnem(head))
-                target_address = idc.get_operand_value(head, 0)
-                target_function_name = idc.get_func_name(target_address)
-                print(target_address, target_function_name)
-                if target_function_name in ("malloc", "free"):
-                    func_call_counts[target_function_name] += 1
-                    if target_function_name == "malloc":
-                        arg = idc.get_operand_value(head, 1)
-                        if arg in malloc_calls:
-                            malloc_calls[arg] += 1
-                        else:
-                            malloc_calls[arg] = 1
-
-    return malloc_calls
-
-def analyze_user_defined_function(func_ea):
-    pass
 
 def main():
+    user_defined_functions = find_user_defined_functions()
+
+    for func_name, func_address in user_defined_functions.items():
+        print(f"Function '{func_name}' found at address: 0x{func_address:08X}")
+        func_list[func_name] = f"0x{func_address:08X}"
+
     for func in idautils.Functions():
         func_name = idc.get_func_name(func)
         if func_name in vuln_func_list:
@@ -46,14 +29,32 @@ def main():
         print("Main function not found")
         return
 
-    malloc_calls = find_malloc_calls(main_func)
-    print(malloc_calls)
-    for arg, count in malloc_calls.items():
-        print(f"malloc({arg}) is called {count} times")
-    
-    print("Malloc Calls:", func_call_counts["malloc"])
-    print("Free Calls:", func_call_counts["free"])
+    print(func_list)
+
     print(vuln_func_called_list)
+
+    print("Starting vuln func called list Caller detection..")
+
+    calls = []
+    calls_func = []
+    for i in func_list.keys():
+        for j in vuln_func_called_list.keys():
+            caller_ea = idc.get_name_ea_simple(i)
+            target_ea = idc.get_name_ea_simple(j)
+            
+            for (startea, endea) in idautils.Chunks(caller_ea):
+                for head in idautils.Heads(startea, endea):
+                    if idc.print_insn_mnem(head) == "call":
+                        target_address = idc.get_operand_value(head, 0)
+                        if target_address == target_ea:
+                            calls.append(hex(head))
+                            if i not in calls_func:
+                                calls_func.append(i)
+    
+    print(calls)
+    print(calls_func)
+
+
 
 if __name__ == "__main__":
     main()
