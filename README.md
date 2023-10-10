@@ -6,7 +6,7 @@
 
 ## Introduce
 
-## Enviroment
+## Environment
 - Tested on IDA Pro 7.5, 7.6
 - Python3 
 
