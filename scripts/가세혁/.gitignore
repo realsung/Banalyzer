@@ -5,3 +5,4 @@ PyQt5
 __pycache__
 ida_32
 ida_64
+idc.py
