@@ -22,5 +22,5 @@
 Open IDA script window (shift+f2) (mode: python), import and run!
 
 ### To-do
-* Add path traversal detection pattern.
+* Modify after accepting feedback
 
