@@ -22,78 +22,6 @@ class Form(PluginForm):
         self.parent.setLayout(layout)
 
 
-    def check_ci(self, result, func_name, args):
-        if self.check(func_name.lower()):
-            for arg in args:
-                for call_info in result:
-                    if hex(arg) in call_info["arguments"]:
-                        return True
-        return False
-
-    
-    def search_vuln_func(self):
-        result = []
-
-        for func_ea in idautils.Functions():
-            func_name = idc.get_func_name(func_ea)
-
-            for (startea, endea) in idautils.Chunks(func_ea):
-                for head in idautils.Heads(startea, endea):
-                    if idc.print_insn_mnem(head) == "call":
-                        call_address = idc.get_operand_value(head, 0)
-
-                        caller_func_ea = None
-                        prev_head = head
-                        while prev_head > startea:
-                            prev_head = idc.prev_head(prev_head)
-                            if idc.print_insn_mnem(prev_head) == "call":
-                                caller_func_ea = idc.get_operand_value(prev_head, 0)
-                                break
-
-                        if caller_func_ea is not None:
-                            caller_func_name = idc.get_func_name(caller_func_ea)
-                            if self.check(caller_func_name):
-                                args = []
-                                current_stack = idc.get_spd(caller_func_ea)
-                                num_args = 4
-                                for i in range(num_args):
-                                    arg_value = idc.get_wide_dword(current_stack) if idc.__EA64__ else idc.get_wide_qword(current_stack)
-                                    args.append(arg_value)
-                                    current_stack += 4 if idc.__EA64__ else 4
-                                
-                                if self.check_ci(result, caller_func_name, args):
-                                    result.append({
-                                        "caller_function": caller_func_name,
-                                        "vulnerable_function": func_name,
-                                        "call_address": hex(call_address),
-                                        "arguments": [hex(arg) for arg in args],
-                                        "type": "Command Injection"
-                                    })
-                                else:
-                                    result.append({
-                                        "caller_function": caller_func_name,
-                                        "vulnerable_function": func_name,
-                                        "call_address": hex(call_address),
-                                        "arguments": [hex(arg) for arg in args],
-                                        "type": "None"
-                                    })
-
-        return result
-
-    def print_vuln_func(self):
-        self.list.clear()
-
-        vuln_calls = self.search_vuln_func()
-
-        for call_info in vuln_calls:
-            item_text = f"Caller Function: {call_info['caller_function']}\n"
-            item_text += f"Vulnerable Function: {call_info['vulnerable_function']}\n"
-            item_text += f"Call Address: {call_info['call_address']}\n"
-            item_text += f"Arguments: {', '.join(call_info['arguments'])}\n"
-            item_text += f"Type: {call_info['type']}\n"
-            item_text += "=" * 30
-            self.list.addItem(item_text)
-
     def check(self, func_name):
         vuln_func_list = [
             'strcpy', 'strncpy', 'strcat', 'strncat', 'sprintf', 'vsprintf', 'gets', 'memcpy', 'memmove', 'fread',
@@ -107,23 +35,92 @@ class Form(PluginForm):
             'lstrcpy', 'lstrcpyA', 'lstrcpyW', 'StrCpyA', 'StrCpyW', 'lstrcpyn', 'lstrcpynA', 'lstrcpynW', 'StrCpyNW',
             'StrCpyNA', 'StrNCpy', 'strncpyA', 'strncpyW', 'wcsncpy', 'StrCpyN', 'strcatA', 'strcatW', 'lstrcat',
             'lstrcatA', 'lstrcatW', 'StrCat', 'StrCatA', 'StrCatW', 'StrCatBuff', 'StrCatBuffA', 'StrCatBuffW',
-            'StrCatChainW', 'StrCatN', 'StrCatNA', 'malloc', 'free', 'read', 'write', 'system', 'exec', 'popen', 'ShellExecute', 'ShellExecuteA', 'ShellExecuteW',
-            'CreateProcess', 'CreateProcessA', 'CreateProcessW'
+            'StrCatChainW', 'StrCatN', 'StrCatNA', 'malloc', 'free', 'read', 'write'
         ]
+
+        vuln_func_list += ['.' + func_name for func_name in vuln_func_list]
+
+
+        if func_name in vuln_func_list:
+            return True
+        else:
+            return False
+
+    def search_vuln_func(self):
+        result = []
 
         exec_func_list = [
             'system', 'exec', 'popen', 'ShellExecute', 'ShellExecuteA', 'ShellExecuteW',
             'CreateProcess', 'CreateProcessA', 'CreateProcessW'
         ]
+        exec_func_list += ['.' + func_name for func_name in exec_func_list]
 
-        vuln_func_list += ['.' + func_name for func_name in vuln_func_list]
+        read_calls = []
 
-        exec_func_list += ['.' + func_name for func_name in vuln_func_list]
+        read_calls_name = []
 
-        if func_name in vuln_func_list or func_name in exec_func_list:
-            return True
-        else:
-            return False
+        read_calls_caller = []
+
+        for func_ea in idautils.Functions():
+            func_name = idc.get_func_name(func_ea)
+
+            for (startea, endea) in idautils.Chunks(func_ea):
+                for head in idautils.Heads(startea, endea):
+                    if idc.print_insn_mnem(head) == "call":
+                        call_address = idc.get_operand_value(head, 0)
+                        call_func_name = idc.get_func_name(call_address)
+
+                        if self.check(call_func_name) is True:
+                            read_calls.append(call_address)
+                            read_calls_name.append(call_func_name)   
+                            read_calls_caller.append(func_name)
+
+
+        for call_address in read_calls:
+            next_head = idc.next_head(call_address)
+            while next_head != idc.BADADDR:
+                if idc.print_insn_mnem(next_head) == "call":
+                    next_call_address = idc.get_operand_value(next_head, 0)
+                    next_call_func_name = idc.get_func_name(next_call_address)
+                    print(next_call_func_name)
+                    if next_call_func_name in exec_func_list:
+                        args = []
+                        current_stack = idc.get_spd(call_address)
+                        num_args = 4
+                        for i in range(num_args):
+                            arg_value = idc.get_wide_dword(current_stack) if idc.__EA64__ else idc.get_wide_qword(current_stack)
+                            args.append(arg_value)
+                            current_stack += 4 if idc.__EA64__ else 4
+
+                        result.append({
+                            'where': read_calls_caller[read_calls.index(call_address)],
+                            'caller_function': idc.get_func_name(call_address),
+                            'vulnerable_function': next_call_func_name,
+                            'call_address': hex(next_call_address),
+                            'arguments': args,
+                            'type': f'Maybe {read_calls_name[0]} command injection'
+                        })
+
+                next_head = idc.next_head(next_head)
+
+        return result
+
+
+
+    def print_vuln_func(self):
+        self.list.clear()
+
+        vuln_calls = self.search_vuln_func()
+
+        for call_info in vuln_calls:
+            item_text = f"Where?: {call_info['where']}()\n"
+            item_text += f"Vulnerable Function: {call_info['caller_function']}\n"
+            item_text += f"Concatenation Function: {call_info['vulnerable_function']}\n"
+            item_text += f"Call Address: {call_info['call_address']}\n"
+            item_text += f"Arguments: {', '.join(map(str, call_info['arguments']))}\n"
+            item_text += f"Type: {call_info['type']}\n"
+            item_text += "=" * 30
+            self.list.addItem(item_text)
 
     def OnClose(self, form):
         pass
