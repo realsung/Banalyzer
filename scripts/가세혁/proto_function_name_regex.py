@@ -1,7 +1,7 @@
 import re
-# import idautils
-# import idc
-# import idaapi
+import idautils
+import idc
+import idaapi
 
 input_vars = []
 
