@@ -15,12 +15,12 @@
 - Tested on =< Python 3.8
 
 ## Features
-> Detects command injection using trace scope after discovering vulnerable functions<br>
+> Detects command injection, path traversal using trace scope after discovering vulnerable functions<br>
 > Supports simple GUI<br>
 
 ## How To Use?
 Open IDA script window (shift+f2) (mode: python), import and run!
 
 ### To-do
-* Add path traversal detection pattern.
+* Modify after accepting feedback
 
