@@ -47,7 +47,7 @@ class Form(PluginForm):
         else:
             return False
 
-    def get_user_defined_functions():
+    def get_user_defined_functions(self):
         udf = []
 
         for func_ea in Functions():
@@ -213,7 +213,7 @@ class Form(PluginForm):
 
         vuln_calls = self.search_vuln_func()
 
-        advanced_vuln_calls = self.advanced_search_vuln_func(vuln_calls)
+        advanced_vuln_calls = self.advanced_search_vuln_func()
 
         for call_info in vuln_calls:
             item_text = f"Where?: {call_info['where']}()\n"
