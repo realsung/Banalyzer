@@ -2,19 +2,30 @@ import re
 import idautils
 import idc
 import idaapi
+import sys
 
 class _func:
     def __init__(self, f):
         self.func = f
         self.loc = hex(f)
         self.name = idc.get_func_name(f)
-        self.var = idaapi.decompile(self.func).get_lvars()
+        try:
+            self.var = idaapi.decompile(self.func).get_lvars()
+        except:
+            self.var = []
     def get_dec_func(self):
-        return idaapi.decompile(self.func).__str__()
+        try:
+            return idaapi.decompile(self.func).__str__()
+        except:
+            return ""
     
+
+logger = open("C:\\Users\\Public\\idatlog.txt", "a")
     
 def log(func, msg):
     print(f"[{func.loc}:{func.name}] {msg}")
+    sys.stdout.write(f"[{func.loc}:{func.name}] {msg}")
+    logger.write(f"[{func.loc}:{func.name}] {msg}\n")
 
 def check_printf(func) -> list:
     ret = []
@@ -40,12 +51,15 @@ def print_func(func):
     print(f"Var: {func.var}")
 
 def main():
+    idc.auto_wait()
     for f in idautils.Functions():
         func = _func(f)
-        print_func(func)
+        #print_func(func)
         printf = check_printf(func)
         for line, arg in printf:
             if check_fsb(line, arg):
                 log(func, f"FSB found at line {line} with arg {arg}")
 
 main()
+logger.close()
+idc.qexit(0)

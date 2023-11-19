@@ -44,17 +44,15 @@ class SSHManager:
         return stdout.readlines()
     
     def run_idat(self):
-        self.send_command("C:\Users\Public\idatclient.py " + self.CWE + " C:\\Windows\\Temp\\" + self.USERNAME + "\\script\\" + self.idaPythonScript + " C:\\Windows\\Temp\\" + self.USERNAME + "\\result.txt")
+        self.send_command("C:\\Users\\Public\\idatclient.py " + self.CWE + " C:\\Windows\\Temp\\" + self.USERNAME + "\\script\\" + self.idaPythonScript + " C:\\Windows\\Temp\\" + self.USERNAME + "\\result.txt")
+        print("C:\\Users\\Public\\idatclient.py " + self.CWE + " C:\\Windows\\Temp\\" + self.USERNAME + "\\script\\" + self.idaPythonScript + " C:\\Windows\\Temp\\" + self.USERNAME + "\\result.txt")
         ret = self.get_file("C:\\Windows\\Temp\\" + self.USERNAME + "\\result.txt", "./result.txt")
-        self.send_command("rm -rf /tmp/" + self.USERNAME + "/script/")
-        self.send_command("rm -rf /tmp/" + self.USERNAME + "/binary/")
-        self.send_command("rm -rf /tmp/" + self.USERNAME + "/result.txt")
         self.close_ssh_client()
         return ret
     
 
-server = SSHManager("0.0.0.0", "username", "password")
-server.idaPythonScript = "./fsb.py"
+server = SSHManager("175.123.194.209", "dpp", "pkq1311**")
+server.idaPythonScript = "fsb.py"
 server.CWE = "134"
 server.send_file()
 print(server.run_idat())
