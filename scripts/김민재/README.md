@@ -7,7 +7,7 @@
 
 <div class="showcase" align="center">
   <h2>Screenshot</h2>
-  <img src="https://cdn.discordapp.com/attachments/922354295729438762/1174978034332356668/image.png?ex=65698e91&is=65571991&hm=251a3d770a3d32e71bf6998221723e4d25ba09b6c67af36d44d195b316593961&" alt="GUI Screenshot" width="400px"/>
+  <img src="https://media.discordapp.net/attachments/922354295729438762/1176420864523255891/image.png?ex=656ece4e&is=655c594e&hm=eae74be3fa8d89c0858f7f4412ae621bdfdb092dddf6872e5bf688827294b195&=&width=1200&height=565" alt="GUI Screenshot" width="400px"/>
 </div>
 
 ## Environment
@@ -16,7 +16,7 @@
 
 ## Features
 > Detects command injection, path traversal using trace scope after discovering vulnerable functions<br>
-> Supports simple GUI<br>
+> Supports Advanced GUI<br>
 
 ## How To Use?
 Open IDA script window (shift+f2) (mode: python), import and run!
