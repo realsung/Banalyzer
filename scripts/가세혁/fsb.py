@@ -61,19 +61,15 @@ def xrefs_var(func, var, origin_line):
     xrefs.append((origin_line, var))
     for line, code in enumerate(dec_func.split('\n')):
         if var in code:
-            print(code[code.index(var)+ len(var)])
             if line >= origin_line:
                 continue
             if code[code.index(var)+ len(var)] in varalpha:
                 continue
             for strcpy in fsb_strcpy_func:
                 if strcpy in code:
-                    print(code)
                     args = re.findall(rf'{strcpy}(\(.+\))\;', code)
-                    print(args)
                     if args:
                         arg_list = args[0].split(',')
-                        print("arglist", arg_list)
                         xrefs.append((line + 1, re.findall(rf'(.+)', arg_list[-1])[0]))
                         if xrefs and "\"" in xrefs[-1][1] or "'" in xrefs[-1][1]:
                             continue
@@ -89,20 +85,15 @@ def check_fsb_vuln(func) -> list:
                 args = re.findall(rf'{vuln_func}(\(.+\))\;', code)
                 if args:
                     arg_list = args[0].split(',')
-                    print("arglist", arg_list)
                     if not any("%" in arg for arg in arg_list):
                         var = arg_list[-1]
                         var = re.findall(rf'(\w+)', var)[-1]
-                        print(var)
                         xrefs = xrefs_var(func, var, line)
-                        print("xres",xrefs)
                         if len(xrefs) == 1:
                             ret.append((xrefs[0][0], xrefs[0][1]))
                             continue
                         for xref in xrefs[1:]:
-                            print("xre", xref[1])
                             if "\"" in xref[1]:
-                                print("continue")
                                 continue
                             ret.append((xref[0], xref[1]))
 
