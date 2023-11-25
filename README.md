@@ -28,8 +28,6 @@ Develop Static Analyzer with IDA-Python
 
 Open IDA script window (shift+f2) (mode: python), import and run, you can drag and drop.
 
----
-
 
 ## Authors and Contributors
 
